@@ -1,4 +1,6 @@
-require('dotenv').config();
+// Remove this line if you are no longer using any environment variables from a .env file.
+// If PORT is still needed from .env, keep it. But for the DB connection, it's removed.
+// require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -6,14 +8,26 @@ const xlsx = require('xlsx');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000; // PORT can still come from environment variable
 
 // Middleware
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Enable parsing of JSON request bodies
 
-// PostgreSQL pool (uses DATABASE_URL or individual vars from .env)
-const pool = new Pool();
+// HARDCODED PostgreSQL connection string
+// WARNING: This is NOT recommended for production environments due to security risks.
+// Environment variables are the preferred and secure way to manage database credentials.
+const connectionString = "postgresql://priceai_user:rKaX0aMlhf0x2EWHyG92KiM3XGPsUqxS@dpg-d14id43uibrs73ag1gg0-a.oregon-postgres.render.com/priceai";
+
+const pool = new Pool({
+  connectionString: connectionString,
+  ssl: {
+    // This is often required for connecting to Render PostgreSQL from outside Render's internal network.
+    // In a production setup, you might configure specific SSL certificate validation
+    // rather than rejecting unauthorized, but for direct hardcoding this often enables the connection.
+    rejectUnauthorized: false
+  }
+});
 
 // --- Helper functions for validation (moved to top for clarity) ---
 const isValidNumber = (value) => typeof value === 'number' && !isNaN(value) && isFinite(value);
